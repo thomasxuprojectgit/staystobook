@@ -5,6 +5,10 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import java.io.Serializable;
 
+/**
+ * Authority does not need translate from json from front end, just get this info from URL
+ * URL will include "host" or "guest"
+ */
 @Entity
 @Table(name = "authority")
 public class Authority implements Serializable {
