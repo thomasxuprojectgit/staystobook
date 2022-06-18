@@ -9,14 +9,25 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import javax.sql.DataSource;
+
+import org.springframework.security.authentication.AuthenticationManager;
+
 
 /**
  * Use Spring security to do register and login
  * WebSecurityConfigurerAdapter set config for how to do the register and login(like which table store user...)
- * @EnableWebSecurity create objs for WebSecurity functions
+ * @EnableWebSecurity create objs (AuthenticationManager) for WebSecurity functions per the config methods in this class
  */
 @EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+    // Spring will auto generate datasource per config in application.properties
+    // use to connect with database
+    @Autowired
+    private DataSource dataSource;
 
     // use to encode password, we use MD5 in the twitch project
     @Bean
@@ -24,17 +35,54 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         return new BCryptPasswordEncoder();
     }
 
+    // config method, tell Spring what to do, Spring need these config set itself
+    // we won't call this method
     // define what actions do not need login requirement
+    // check whether it has authority to do some actions for this user type
     // like. antMatchers(HttpMethod.POST, "/register/*").permitAll(), register does not need login first
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
                 .authorizeRequests()
                 .antMatchers(HttpMethod.POST, "/register/*").permitAll()
+                .antMatchers(HttpMethod.POST, "/authenticate/*").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .csrf()
                 .disable();
     }
+
+    // config method, tell Spring what to do, Spring need these config set itself
+    // we won't call this method
+    // check whether user can log in
+    // authenticate http request -> username & password
+    // find username and password from database
+    // then check user's info match with the info in database
+    // 使用JDBC直接调用SQL语句，没有使用ORM
+    // use AuthenticationManagerBuilder check username and password
+    // .jdbcAuthentication() use to check username and password in database
+    // .usersByUsernameQuery and .authoritiesByUsernameQuery will do the auto match,
+    // we do not need to manually write code (like if User.username == providedUserName)
+    // .authoritiesByUsernameQuery will get authority type
+    // "username, password, enabled" SQL must match with fields in User class
+    // .passwordEncoder will encode password from http request, then do match compare
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.jdbcAuthentication().dataSource(dataSource)
+                .passwordEncoder(passwordEncoder())
+                .usersByUsernameQuery("SELECT username, password, enabled FROM user WHERE username = ?")
+                .authoritiesByUsernameQuery("SELECT username, authority FROM authority WHERE username = ?");
+    }
+
+    // caller will use AuthenticationManager obj's authenticate method to check user name password
+    // we need to call this method to do check username and password
+    // the configure methods above are just config, we will not directly call them
+    // but config is important as AuthenticationManager need the config info to do check
+    @Override
+    @Bean
+    public AuthenticationManager authenticationManagerBean() throws Exception {
+        return super.authenticationManagerBean();
+    }
+
 
 }
