@@ -13,6 +13,8 @@ import io.jsonwebtoken.Claims;
 
 @Component
 public class JwtUtil {
+
+    // get secret from application.properties
     @Value("${jwt.secret}")
     private String secret;
 

@@ -14,7 +14,7 @@ import java.util.List;
 @Entity
 @Table(name = "stay")
 @JsonDeserialize(builder = Stay.Builder.class)
-public class Stay {
+public class Stay implements Serializable {
 
     // @Id annotate primary key (stay_id in table)
     // @GeneratedValue how to generate a value  for this primary key (GenerationType.AUTO means auto generate)
@@ -34,6 +34,21 @@ public class Stay {
     @JoinColumn(name = "user_id")
     private User host;
 
+    // CascadeType.ALL when delete stay, delete stayImages(all is all CRUD method)
+    // fetch=FetchType.EAGER: when get Stay, auto get StayImage
+    @OneToMany(mappedBy = "stay", cascade = CascadeType.ALL, fetch=FetchType.EAGER)
+    private List<StayImage> images;
+
+    public List<StayImage> getImages() {
+        return images;
+    }
+
+    public Stay setImages(List<StayImage> images) {
+        this.images = images;
+        return this;
+    }
+
+
     public Stay() {}
 
     // use Builder design to convert json from front end to Stay obj
@@ -44,6 +59,7 @@ public class Stay {
         this.address = builder.address;
         this.guestNumber = builder.guestNumber;
         this.host = builder.host;
+        this.images = builder.images;
     }
 
     public Long getId() {
@@ -91,6 +107,10 @@ public class Stay {
         @JsonProperty("host")
         private User host;
 
+        @JsonProperty("images")
+        private List<StayImage> images;
+
+
         public Builder setId(Long id) {
             this.id = id;
             return this;
@@ -118,6 +138,11 @@ public class Stay {
 
         public Builder setHost(User host) {
             this.host = host;
+            return this;
+        }
+
+        public Builder setImages(List<StayImage> images) {
+            this.images = images;
             return this;
         }
 

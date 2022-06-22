@@ -10,9 +10,13 @@ import com.laioffer.staybooking.model.*;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * CRUD Stay info between front end and database
@@ -21,10 +25,15 @@ import java.util.List;
 public class StayService {
     private StayRepository stayRepository;
 
+    // use ImageStorageService as StayService's dependency
+    private ImageStorageService imageStorageService;
+
     // StayRepository is used to communicate with database
     @Autowired
-    public StayService(StayRepository stayRepository) {
+    public StayService(StayRepository stayRepository, ImageStorageService imageStorageService) {
         this.stayRepository = stayRepository;
+        this.imageStorageService = imageStorageService;
+
     }
 
     // search stays of a user
@@ -42,8 +51,22 @@ public class StayService {
         return stay;
     }
 
-    // add a stay
-    public void add(Stay stay) {
+    // add a stay standard info, and add the image of the stay
+    // make sure updates to two tables (StayImage table and Stay table) is atomic
+    @Transactional(isolation = Isolation.SERIALIZABLE)
+    public void add(Stay stay, MultipartFile[] images) {
+        // parallel() parallel upload images
+        // upload images and get links of images
+        List<String> mediaLinks = Arrays.stream(images).parallel().map(image -> imageStorageService.save(image)).collect(Collectors.toList());
+        List<StayImage> stayImages = new ArrayList<>();
+
+        // add each image link to StayImage table
+        for (String mediaLink : mediaLinks) {
+            stayImages.add(new StayImage(mediaLink, stay));
+        }
+        stay.setImages(stayImages);
+
+        // add Stay obj to Stay table
         stayRepository.save(stay);
     }
 
