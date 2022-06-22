@@ -1,4 +1,4 @@
-Create "resources" folder under "src/main" folder
+(1)Create "resources" folder under "src/main" folder
 Create "application.properties" file under created "resources" folder
 Then copy/paste and fill following code in this file
 spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
@@ -9,3 +9,4 @@ spring.datasource.url=jdbc:mysql://Your DataBase End Point:3306/staybooking?crea
 spring.datasource.username=Your DataBase Username
 spring.datasource.password=Your DataBase Password
 jwt.secret=secret
+(2) Create google cloud storage bucket and create crendential key (json), copy this key to "resources" folder above
