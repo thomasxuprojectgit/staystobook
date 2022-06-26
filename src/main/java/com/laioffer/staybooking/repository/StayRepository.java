@@ -28,5 +28,6 @@ public interface StayRepository extends JpaRepository<Stay, Long> {
     // so only id not good enough, otherwise, other owner can delete my stay
     Stay findByIdAndHost(Long id, User host);
 
+    List<Stay> findByIdInAndGuestNumberGreaterThanEqual(List<Long> ids, int guestNumber);
 
 }

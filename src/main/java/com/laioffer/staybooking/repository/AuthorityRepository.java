@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 /**
+ * Used to get user's authority per username
  * extend JpaRepository that we can use JPA API to CRUD to communicate with database
  * we just need to use the methods defined under JpaRepository
  * <Authority, String> first is target table, second is primary key type
@@ -13,6 +14,6 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface AuthorityRepository extends JpaRepository<Authority, String> {
-
+    Authority findAuthorityByUsername(String username);
 }
 

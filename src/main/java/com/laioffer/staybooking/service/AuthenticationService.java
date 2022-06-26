@@ -35,6 +35,7 @@ public class AuthenticationService {
     // the main function to do authorization
     // input is user info and authority
     // return is token
+    // use authenticationManager from SecurityConfig
     public Token authenticate(User user, UserRole role) throws UserNotExistException {
         Authentication auth = null;
         try {

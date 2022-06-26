@@ -20,6 +20,11 @@ public class AuthenticationController {
     }
 
     // method to authenticate guest
+    // user send username, password, which will be converted to User obj through @RequestBody (Spring framework -
+    // Deserialize from json to obj)
+    // use method authenticationService.authenticate method to generate token
+    // authenticationService will call function in SecurityConfig(by using AuthenticationManagerBuilder to complete the
+    // actual authentication work)
     @PostMapping("/authenticate/guest")
     public Token authenticateGuest(@RequestBody User user) {
         return authenticationService.authenticate(user, UserRole.ROLE_GUEST);

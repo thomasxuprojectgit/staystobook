@@ -18,6 +18,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.laioffer.staybooking.repository.LocationRepository;
+
+
 /**
  * CRUD Stay info between front end and database
  */
@@ -25,14 +28,22 @@ import java.util.stream.Collectors;
 public class StayService {
     private StayRepository stayRepository;
 
+    private LocationRepository locationRepository;
+
     // use ImageStorageService as StayService's dependency
     private ImageStorageService imageStorageService;
 
+    private GeoCodingService geoCodingService;
+
+
     // StayRepository is used to communicate with database
     @Autowired
-    public StayService(StayRepository stayRepository, ImageStorageService imageStorageService) {
+    public StayService(StayRepository stayRepository, LocationRepository locationRepository,
+                       ImageStorageService imageStorageService, GeoCodingService geoCodingService) {
         this.stayRepository = stayRepository;
+        this.locationRepository = locationRepository;
         this.imageStorageService = imageStorageService;
+        this.geoCodingService = geoCodingService;
 
     }
 
@@ -68,6 +79,13 @@ public class StayService {
 
         // add Stay obj to Stay table
         stayRepository.save(stay);
+
+        // Get Location from Google API
+        Location location = geoCodingService.getLatLng(stay.getId(), stay.getAddress());
+
+        // Save location to ElasticSearch
+        locationRepository.save(location);
+
     }
 
     // delete a stay

@@ -15,6 +15,10 @@ import javax.sql.DataSource;
 
 import org.springframework.security.authentication.AuthenticationManager;
 
+import com.laioffer.staybooking.filter.JwtFilter;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
 
 /**
  * Use Spring security to do register and login
@@ -29,6 +33,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private DataSource dataSource;
 
+    @Autowired
+    private JwtFilter jwtFilter;
+
     // use to encode password, we use MD5 in the twitch project
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -40,18 +47,30 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     // define what actions do not need login requirement
     // check whether it has authority to do some actions for this user type
     // like. antMatchers(HttpMethod.POST, "/register/*").permitAll(), register does not need login first
+    //                 .antMatchers("/stays").hasAuthority("ROLE_HOST") means this URL need host role
+    //                .antMatchers("/stays/*").hasAuthority("ROLE_HOST") means this URL need host role
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
                 .authorizeRequests()
                 .antMatchers(HttpMethod.POST, "/register/*").permitAll()
                 .antMatchers(HttpMethod.POST, "/authenticate/*").permitAll()
-                .antMatchers("/stays").permitAll()
-                .antMatchers("/stays/*").permitAll()
+                .antMatchers("/stays").hasAuthority("ROLE_HOST")
+                .antMatchers("/stays/*").hasAuthority("ROLE_HOST")
+                .antMatchers("/search").hasAuthority("ROLE_GUEST")
                 .anyRequest().authenticated()
                 .and()
                 .csrf()
                 .disable();
+
+        // STATELESS: does not use session based, instead, use token based
+        // addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class): use our filter (jwtFilter) before default filter
+        http
+                .sessionManagement()
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .and()
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+
     }
 
     // config method, tell Spring what to do, Spring need these config set itself
@@ -68,6 +87,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     // .authoritiesByUsernameQuery will get authority type
     // "username, password, enabled" SQL must match with fields in User class
     // .passwordEncoder will encode password from http request, then do match compare
+    // @Override WebSecurityConfigurerAdapter's  AuthenticationManagerBuilder method to config an Authentication Manager
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.jdbcAuthentication().dataSource(dataSource)
@@ -80,6 +100,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     // we need to call this method to do check username and password
     // the configure methods above are just config, we will not directly call them
     // but config is important as AuthenticationManager need the config info to do check
+    // @Bean creates an AuthenticationManager
+    // @Override WebSecurityConfigurerAdapter's authenticationManagerBean() method to creates an AuthenticationManager
     @Override
     @Bean
     public AuthenticationManager authenticationManagerBean() throws Exception {
