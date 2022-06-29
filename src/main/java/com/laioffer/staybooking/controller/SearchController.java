@@ -12,6 +12,9 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+/**
+ * Used to search stay ids
+ */
 @RestController
 public class SearchController {
     private SearchService searchService;
@@ -21,6 +24,8 @@ public class SearchController {
         this.searchService = searchService;
     }
 
+    // get all param from URL
+    // then call the searchService.search method
     @GetMapping(value = "/search")
     public List<Stay> searchStays(
             @RequestParam(name = "guest_number") int guestNumber,

@@ -1,6 +1,8 @@
 package com.laioffer.staybooking.service;
 
+import com.laioffer.staybooking.exception.StayDeleteException;
 import com.laioffer.staybooking.exception.StayNotExistException;
+import com.laioffer.staybooking.repository.StayReservationDateRepository;
 import org.springframework.stereotype.Service;
 
 import com.laioffer.staybooking.repository.StayRepository;
@@ -11,6 +13,8 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.web.multipart.MultipartFile;
+
+import com.laioffer.staybooking.repository.ReservationRepository;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -30,20 +34,30 @@ public class StayService {
 
     private LocationRepository locationRepository;
 
+    private ReservationRepository reservationRepository;
+
     // use ImageStorageService as StayService's dependency
     private ImageStorageService imageStorageService;
 
     private GeoCodingService geoCodingService;
 
 
+    // for updating stay_reserved_date table
+    private StayReservationDateRepository stayReservationDateRepository;
+
+
     // StayRepository is used to communicate with database
     @Autowired
     public StayService(StayRepository stayRepository, LocationRepository locationRepository,
-                       ImageStorageService imageStorageService, GeoCodingService geoCodingService) {
+                       ReservationRepository reservationRepository,
+                       ImageStorageService imageStorageService, GeoCodingService geoCodingService,
+                       StayReservationDateRepository stayReservationDateRepository) {
         this.stayRepository = stayRepository;
         this.locationRepository = locationRepository;
+        this.reservationRepository = reservationRepository;
         this.imageStorageService = imageStorageService;
         this.geoCodingService = geoCodingService;
+        this.stayReservationDateRepository = stayReservationDateRepository;
 
     }
 
@@ -96,6 +110,22 @@ public class StayService {
         if (stay == null) {
             throw new StayNotExistException("Stay doesn't exist");
         }
+
+        // find any booked reservation dates after now
+        List<Reservation> reservations = reservationRepository.findByStayAndCheckoutDateAfter(stay, LocalDate.now());
+
+        // if found the dates booked, can not delete this stay, throw exception
+        if (reservations != null && reservations.size() > 0) {
+            throw new StayDeleteException("Cannot delete stay with active reservation");
+        }
+
+        // if not found any dates booked, can delete, also, we need to delete the reserved dates, per stay ID
+        List<StayReservedDate> stayReservedDates = stayReservationDateRepository.findByStay(stay);
+
+        for(StayReservedDate date : stayReservedDates) {
+            stayReservationDateRepository.deleteById(date.getId());
+        }
+
         // can also use stayRepository.deleteByStay(stay);
         stayRepository.deleteById(stayId);
     }

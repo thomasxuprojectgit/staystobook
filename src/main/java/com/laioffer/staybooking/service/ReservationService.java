@@ -47,10 +47,11 @@ public class ReservationService {
     @Transactional(isolation = Isolation.SERIALIZABLE)
     public void add(Reservation reservation) throws ReservationCollisionException {
 
-        // Get a set of stay ids, per stay id and dates
+        // Per guest provided reservation date range and stay id, check with database (ReservationDates table) to see
+        // whether these dates for this stay has been booked for some days (then put in set)
         Set<Long> stayIds = stayReservationDateRepository.findByIdInAndDateBetween(Arrays.asList(reservation.getStay().getId()), reservation.getCheckinDate(), reservation.getCheckoutDate().minusDays(1));
 
-        // if set of stay is not empty, there is duplicate, throw exception
+        // if set of stay is not empty, there is duplicate(between guest choice and database data(reserved by others)), throw exception
         if (!stayIds.isEmpty()) {
             throw new ReservationCollisionException("Duplicate reservation");
         }
@@ -69,5 +70,27 @@ public class ReservationService {
         // Save the Reservation obj to Reservation table
         reservationRepository.save(reservation);
     }
+
+    // To delete reservation,  need both the username and reservationId, to make sure no delete reservation of others
+    @Transactional(isolation = Isolation.SERIALIZABLE)
+    public void delete(Long reservationId, String username) {
+        Reservation reservation = reservationRepository.findByIdAndGuest(reservationId, new User.Builder().setUsername(username).build());
+
+        // if can not find reservation, throw error
+        if (reservation == null) {
+            throw new ReservationNotFoundException("Reservation is not available");
+        }
+
+        // iterate over each date
+        for (LocalDate date = reservation.getCheckinDate(); date.isBefore(reservation.getCheckoutDate()); date = date.plusDays(1)) {
+
+            // delete each date's reservation from table stay_reserved_date, id is composite primary key (StayReservedDateKey)
+            stayReservationDateRepository.deleteById(new StayReservedDateKey(reservation.getStay().getId(), date));
+        }
+
+        // delete from table reservation
+        reservationRepository.deleteById(reservationId);
+    }
+
 }
 
