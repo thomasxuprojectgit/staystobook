@@ -9,4 +9,9 @@ spring.datasource.url=jdbc:mysql://Your DataBase End Point:3306/staybooking?crea
 spring.datasource.username=Your DataBase Username
 spring.datasource.password=Your DataBase Password
 jwt.secret=secret
+gcs.bucket=Your Bucket in Google Cloud
+elasticsearch.address=xx.xxx.xxx.xxx:9200
+elasticsearch.username=Your ElasticSearch Username
+elasticsearch.password=Your ElasticSearch Password
+geocoding.apikey=Your Geocoding API Key
 (2) Create google cloud storage bucket and create crendential key (json), copy this key to "resources" folder above
