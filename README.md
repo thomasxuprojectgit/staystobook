@@ -1,4 +1,4 @@
-Demo video: https://1drv.ms/v/s!AqkPfqbVnQR-l_UNfqasnstYsey52g?e=NsG7rf
+Demo video: https://1drv.ms/v/s!As6IPMJ-7Ua_byL2FrIXXVQmnzQ?e=ngBbVB
 
 
 StaysToBook: An online stay rental application based on React and Spring Boot.
