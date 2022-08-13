@@ -11,6 +11,6 @@ StaysToBook: An online stay rental application based on React and Spring Boot.
  
 
 
-![StayBooking Project](https://user-images.githubusercontent.com/107577761/184507448-4dde9902-adfe-4c22-b0ec-f73a8e21d28b.png)
+![StayBooking Project](https://user-images.githubusercontent.com/107577761/184507503-1990d796-c3f2-46e5-9196-a0014dc27ad7.png)
 
 ![data_model](https://user-images.githubusercontent.com/107577761/184413621-8ff82bba-5ea8-4c9e-b049-73c27f1643a0.png)
