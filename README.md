@@ -1,6 +1,3 @@
-Demo video: https://1drv.ms/v/s!As6IPMJ-7Ua_byL2FrIXXVQmnzQ?e=ngBbVB
-
-
 StaysToBook: An online stay rental application based on React and Spring Boot.
  - Designed and built a single page web application using React. Bootstrap the development with mature component library AntD.
  - Implemented the backend services based on Spring Boot to support stay upload, delete, search and reserve functionality.
